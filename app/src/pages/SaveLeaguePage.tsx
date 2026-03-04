@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { useLeague } from '../state/LeagueContext'
 
-type AuthMethod = 'password' | 'otp'
-
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message
   if (typeof error === 'object' && error !== null && 'message' in error) {
@@ -21,22 +19,19 @@ export function SaveLeaguePage() {
 
   const [step, setStep] = useState<'email' | 'verify' | 'details'>('email')
   const [email, setEmail] = useState('')
-  const [method, setMethod] = useState<AuthMethod>('password')
   const [code, setCode] = useState('')
   const [generatedCode, setGeneratedCode] = useState('')
   const [leagueName, setLeagueName] = useState(league.leagueName)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [inviteInput, setInviteInput] = useState('')
-  const [inviteEmails, setInviteEmails] = useState<string[]>(league.members)
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
 
   const canSubmitDetails = useMemo(() => {
     if (!leagueName.trim()) return false
-    if (method === 'password' && (!password || password !== confirmPassword || password.length < 6)) return false
+    if (!password || password !== confirmPassword || password.length < 6) return false
     return true
-  }, [leagueName, method, password, confirmPassword])
+  }, [leagueName, password, confirmPassword])
 
   async function sendCode(): Promise<void> {
     setError('')
@@ -97,12 +92,12 @@ export function SaveLeaguePage() {
       return
     }
 
-    if (method === 'password' && password.length < 6) {
+    if (password.length < 6) {
       setError('Password must be at least 6 characters.')
       return
     }
 
-    if (method === 'password' && isSupabaseConfigured && supabase && password) {
+    if (isSupabaseConfigured && supabase && password) {
       const { error: updateError } = await supabase.auth.updateUser({ password })
       if (updateError) {
         setError(getErrorMessage(updateError, 'Could not set password for this account.'))
@@ -111,7 +106,7 @@ export function SaveLeaguePage() {
     }
 
     try {
-      await saveLeagueDetails(leagueName, [email, ...inviteEmails])
+      await saveLeagueDetails(leagueName, [email])
     } catch (e) {
       setError(getErrorMessage(e, 'Failed to save league.'))
       return
@@ -120,18 +115,11 @@ export function SaveLeaguePage() {
     setTimeout(() => navigate('/leaderboard'), 900)
   }
 
-  function addInvite(): void {
-    const trimmed = inviteInput.trim().toLowerCase()
-    if (!trimmed || inviteEmails.includes(trimmed)) return
-    setInviteEmails((prev) => [...prev, trimmed])
-    setInviteInput('')
-  }
-
   return (
     <section className="card">
       <div className="section-title">
         <h2>Save for Next Time</h2>
-        <p>Use password or OTP. Every member can invite more members and manage the league.</p>
+        <p>Verify your email, then create a password to manage your league.</p>
       </div>
 
       {step === 'email' && (
@@ -170,54 +158,16 @@ export function SaveLeaguePage() {
             <input value={leagueName} onChange={(event) => setLeagueName(event.target.value)} />
           </label>
 
-          <div className="toggle-wrap">
-            <button
-              type="button"
-              className={method === 'password' ? 'toggle active' : 'toggle'}
-              onClick={() => setMethod('password')}
-            >
-              Password
-            </button>
-            <button type="button" className={method === 'otp' ? 'toggle active' : 'toggle'} onClick={() => setMethod('otp')}>
-              Email OTP
-            </button>
-          </div>
-
-          {method === 'password' && (
-            <>
-              <label className="field-label">
-                <span>Password</span>
-                <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-              </label>
-              <p className="hint">Use at least 6 characters.</p>
-              <label className="field-label">
-                <span>Confirm password</span>
-                <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
-              </label>
-            </>
-          )}
-
-          <div className="field-label">
-            <span>(Optional) Add member emails</span>
-            <div className="invite-row">
-              <input
-                value={inviteInput}
-                onChange={(event) => setInviteInput(event.target.value)}
-                placeholder="friend@example.com"
-              />
-              <button className="btn-outline" onClick={addInvite} type="button">
-                Add
-              </button>
-            </div>
-          </div>
-
-          <div className="chips-wrap">
-            {inviteEmails.map((memberEmail) => (
-              <span key={memberEmail} className="chip active">
-                {memberEmail}
-              </span>
-            ))}
-          </div>
+          <p className="hint">Create Password</p>
+          <label className="field-label">
+            <span>Password</span>
+            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+          </label>
+          <p className="hint">Use at least 6 characters.</p>
+          <label className="field-label">
+            <span>Confirm password</span>
+            <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+          </label>
 
           <div className="row-actions">
             <button className="btn-outline" onClick={() => setStep('verify')} type="button">
