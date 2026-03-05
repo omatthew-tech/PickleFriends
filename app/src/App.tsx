@@ -69,7 +69,7 @@ export default function App() {
     <div className="app-shell court-bg">
       <header className="app-header">
         <h1>PickleParty</h1>
-        <p>Keep track of your casual pickleball league with ease.</p>
+        <p>Keep track of your casual pickleball league for free.</p>
       </header>
       <Nav />
       <main className="page-wrap">
