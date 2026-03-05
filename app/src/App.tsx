@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { CreateBracketPage } from './pages/CreateBracketPage'
 import { EditScoresPage } from './pages/EditScoresPage'
@@ -9,50 +8,18 @@ import { LeaderboardPage } from './pages/LeaderboardPage'
 import { RecommendedMatchesPage } from './pages/RecommendedMatchesPage'
 import { SaveLeaguePage } from './pages/SaveLeaguePage'
 import { HomePage } from './pages/HomePage'
-import { useLeague } from './state/LeagueContext'
 import { EditLeaguePage } from './pages/EditLeaguePage'
 import { ChangeLeaguePage } from './pages/ChangeLeaguePage'
-import { isSupabaseConfigured, supabase } from './lib/supabase'
 import { LoginPage } from './pages/LoginPage'
 import { ShareLeaguePage } from './pages/ShareLeaguePage'
 import { JoinLeaguePage } from './pages/JoinLeaguePage'
 
 function Nav() {
   const location = useLocation()
-  const { league } = useLeague()
-  const hasBracket = league.players.length >= 2
-  const hasSavedLeague = Boolean(league.isLeagueSaved || league.activeLeagueId)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
-      setIsAuthenticated(false)
-      return
-    }
-
-    let cancelled = false
-    void (async () => {
-      const { data } = await supabase.auth.getSession()
-      if (!cancelled) setIsAuthenticated(Boolean(data.session?.user))
-    })()
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!cancelled) setIsAuthenticated(Boolean(session?.user))
-    })
-
-    return () => {
-      cancelled = true
-      data.subscription.unsubscribe()
-    }
-  }, [])
-
-  if (!isAuthenticated) return null
 
   const links = [
-    { to: '/', label: 'Home' },
     { to: '/leaderboard', label: 'Leaderboard' },
-    { to: '/create-bracket', label: hasBracket ? 'Add Players' : 'Create Bracket' },
-    { to: hasSavedLeague ? '/edit-league' : '/save', label: hasSavedLeague ? 'Edit League' : 'Save for Next Time' },
+    { to: '/create-bracket', label: 'Add Players' },
     { to: '/share-league', label: 'Share League' },
   ]
 
