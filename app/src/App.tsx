@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { CreateBracketPage } from './pages/CreateBracketPage'
 import { EditScoresPage } from './pages/EditScoresPage'
@@ -11,6 +12,7 @@ import { HomePage } from './pages/HomePage'
 import { useLeague } from './state/LeagueContext'
 import { EditLeaguePage } from './pages/EditLeaguePage'
 import { ChangeLeaguePage } from './pages/ChangeLeaguePage'
+import { isSupabaseConfigured, supabase } from './lib/supabase'
 import { LoginPage } from './pages/LoginPage'
 import { ShareLeaguePage } from './pages/ShareLeaguePage'
 import { JoinLeaguePage } from './pages/JoinLeaguePage'
@@ -18,7 +20,32 @@ import { JoinLeaguePage } from './pages/JoinLeaguePage'
 function Nav() {
   const location = useLocation()
   const { league } = useLeague()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const hasSavedLeague = Boolean(league.isLeagueSaved || league.activeLeagueId)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      setIsAuthenticated(false)
+      return
+    }
+
+    let cancelled = false
+    void (async () => {
+      const { data } = await supabase.auth.getSession()
+      if (!cancelled) setIsAuthenticated(Boolean(data.session?.user))
+    })()
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!cancelled) setIsAuthenticated(Boolean(session?.user))
+    })
+
+    return () => {
+      cancelled = true
+      data.subscription.unsubscribe()
+    }
+  }, [])
+
+  if (!isAuthenticated || location.pathname === '/login') return null
 
   const links = [
     { to: '/leaderboard', label: 'Leaderboard' },
