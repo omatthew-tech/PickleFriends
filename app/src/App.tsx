@@ -8,6 +8,7 @@ import { LeaderboardPage } from './pages/LeaderboardPage'
 import { RecommendedMatchesPage } from './pages/RecommendedMatchesPage'
 import { SaveLeaguePage } from './pages/SaveLeaguePage'
 import { HomePage } from './pages/HomePage'
+import { useLeague } from './state/LeagueContext'
 import { EditLeaguePage } from './pages/EditLeaguePage'
 import { ChangeLeaguePage } from './pages/ChangeLeaguePage'
 import { LoginPage } from './pages/LoginPage'
@@ -16,10 +17,12 @@ import { JoinLeaguePage } from './pages/JoinLeaguePage'
 
 function Nav() {
   const location = useLocation()
+  const { league } = useLeague()
+  const hasSavedLeague = Boolean(league.isLeagueSaved || league.activeLeagueId)
 
   const links = [
     { to: '/leaderboard', label: 'Leaderboard' },
-    { to: '/create-bracket', label: 'Add Players' },
+    { to: hasSavedLeague ? '/edit-league' : '/save', label: hasSavedLeague ? 'Edit League' : 'Save for Next Time' },
     { to: '/share-league', label: 'Share League' },
   ]
 

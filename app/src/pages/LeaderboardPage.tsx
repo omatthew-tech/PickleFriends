@@ -4,7 +4,6 @@ import { useLeague } from '../state/LeagueContext'
 export function LeaderboardPage() {
   const { league, leaderboard } = useLeague()
   const navigate = useNavigate()
-  const hasSavedLeague = Boolean(league.isLeagueSaved || league.activeLeagueId)
 
   if (league.players.length < 2) {
     return (
@@ -51,8 +50,8 @@ export function LeaderboardPage() {
         <button className="btn-outline" onClick={() => navigate('/edit-scores')}>
           Edit Scores
         </button>
-        <button className="btn-outline" onClick={() => navigate(hasSavedLeague ? '/edit-league' : '/save')}>
-          {hasSavedLeague ? 'Edit League' : 'Save for Next Time'}
+        <button className="btn-outline" onClick={() => navigate('/create-bracket')}>
+          Add Players
         </button>
       </div>
     </section>
