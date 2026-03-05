@@ -22,6 +22,7 @@ function Nav() {
   const { league } = useLeague()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const hasSavedLeague = Boolean(league.isLeagueSaved || league.activeLeagueId)
+  const hasStartedLocalLeague = league.players.length >= 2
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
@@ -45,11 +46,11 @@ function Nav() {
     }
   }, [])
 
-  if (!isAuthenticated || location.pathname === '/login') return null
+  if ((!isAuthenticated && !hasStartedLocalLeague) || location.pathname === '/login') return null
 
   const links = [
     { to: '/leaderboard', label: 'Leaderboard' },
-    { to: hasSavedLeague ? '/edit-league' : '/save', label: hasSavedLeague ? 'Edit League' : 'Save for Next Time' },
+    { to: hasSavedLeague ? '/edit-league' : '/save', label: hasSavedLeague ? 'Edit League' : 'Sign Up' },
     { to: '/share-league', label: 'Share League' },
   ]
 

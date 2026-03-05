@@ -87,7 +87,7 @@ export function ShareLeaguePage() {
         </div>
         <div className="row-actions">
           <button className="btn-primary" onClick={() => navigate('/save')} type="button">
-            Save for Next Time
+            Sign Up
           </button>
           <button className="btn-outline" onClick={() => navigate('/leaderboard')} type="button">
             Back

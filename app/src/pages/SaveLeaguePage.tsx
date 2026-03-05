@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
@@ -27,6 +27,34 @@ export function SaveLeaguePage() {
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
 
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+
+    let cancelled = false
+
+    const applySignedInUser = (userEmail?: string): void => {
+      if (cancelled || !userEmail) return
+      setEmail((prev) => prev || userEmail.toLowerCase())
+      setStep('details')
+      setError('')
+      setStatus('Email confirmed. Create your password to finish sign up.')
+    }
+
+    void (async () => {
+      const { data } = await supabase.auth.getSession()
+      applySignedInUser(data.session?.user?.email)
+    })()
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySignedInUser(session?.user?.email)
+    })
+
+    return () => {
+      cancelled = true
+      data.subscription.unsubscribe()
+    }
+  }, [])
+
   const canSubmitDetails = useMemo(() => {
     if (!leagueName.trim()) return false
     if (!password || password !== confirmPassword || password.length < 6) return false
@@ -42,12 +70,17 @@ export function SaveLeaguePage() {
     }
 
     if (isSupabaseConfigured && supabase) {
-      const { error: supabaseError } = await supabase.auth.signInWithOtp({ email: email.trim() })
+      const { error: supabaseError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/save`,
+        },
+      })
       if (supabaseError) {
         setError(supabaseError.message)
         return
       }
-      setStatus('Verification code sent to your email.')
+      setStatus('Verification code and magic link sent to your email.')
     } else {
       const localCode = `${Math.floor(100000 + Math.random() * 900000)}`
       setGeneratedCode(localCode)
@@ -80,7 +113,7 @@ export function SaveLeaguePage() {
     }
 
     setStep('details')
-    setStatus('Email verified.')
+    setStatus('')
   }
 
   async function submitDetails(event: FormEvent): Promise<void> {
@@ -118,8 +151,8 @@ export function SaveLeaguePage() {
   return (
     <section className="card">
       <div className="section-title">
-        <h2>Save for Next Time</h2>
-        <p>Verify your email, then create a password to manage your league.</p>
+        <h2>Sign Up</h2>
+        <p>Finish saving your league by creating a password.</p>
       </div>
 
       {step === 'email' && (
@@ -154,7 +187,7 @@ export function SaveLeaguePage() {
       {step === 'details' && (
         <form className="list-stack" onSubmit={(event) => void submitDetails(event)}>
           <label className="field-label">
-            <span>League name</span>
+            <span>League name (this can be changed later)</span>
             <input value={leagueName} onChange={(event) => setLeagueName(event.target.value)} />
           </label>
 

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { useLeague } from '../state/LeagueContext'
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { resetLeague } = useLeague()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
@@ -41,7 +43,14 @@ export function HomePage() {
             <h2>Ready To Play?</h2>
             <p>Create your league in seconds or continue where you left off.</p>
             <div className="home-actions">
-              <button className="btn-primary" onClick={() => navigate('/create-bracket')} type="button">
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  if (!isAuthenticated) resetLeague()
+                  navigate('/create-bracket')
+                }}
+                type="button"
+              >
                 {isAuthenticated ? 'Create New League' : 'Get Started - No Sign Up Required'}
               </button>
               <button className="btn-secondary" onClick={() => navigate(isAuthenticated ? '/change-league' : '/login')} type="button">

@@ -45,6 +45,7 @@ interface LeagueContextValue {
   refreshFromSupabase: () => Promise<void>
   setActiveLeague: (leagueId: string) => Promise<void>
   resetDraft: () => void
+  resetLeague: () => void
 }
 
 const LeagueContext = createContext<LeagueContextValue | null>(null)
@@ -296,6 +297,11 @@ export function LeagueProvider({ children }: { children: ReactNode }) {
     refreshFromSupabase,
     setActiveLeague,
     resetDraft: () => setScoreDraftState(defaultDraft),
+    resetLeague: () => {
+      setLeagueAndPersist(() => ({ ...defaultLeague }))
+      setScoreDraftState(defaultDraft)
+      setSyncError(null)
+    },
   }
 
   return <LeagueContext.Provider value={value}>{children}</LeagueContext.Provider>
